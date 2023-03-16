@@ -1,0 +1,7 @@
+###### Requirements without Version Specifiers ######
+mypy
+watchdog
+
+###### Requirements with Version Specifiers ######
+uvicorn >= 0.18
+fastapi >= 0.68
