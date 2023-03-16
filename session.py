@@ -65,3 +65,7 @@ def clearlimit(username: str):
         else:
             print(command, match)
     return 'No session limit found'
+
+@app.get('/shutdown')
+def shutdown():
+    return lib.shell('shutdown', '-P')
