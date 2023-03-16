@@ -68,4 +68,4 @@ def clearlimit(username: str):
 
 @app.get('/shutdown')
 def shutdown():
-    return lib.shell('shutdown', '-P')
+    return lib.shell('shutdown', '-P', 'now')
