@@ -44,7 +44,11 @@ def whoam():
 
 app.mount('/session', session.app)
 
-if __name__ == '__main__':
+def main():
     logging.basicConfig(format='%(asctime)s | %(levelname)s:     %(message)s', level=logging.INFO)
     logging.info('Logging started')
-    uvicorn.run(app, host='0.0.0.0')
+    uvicorn.run(app, host='0.0.0.0', port=2727)
+
+
+if __name__ == '__main__':
+    main()
