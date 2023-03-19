@@ -41,8 +41,8 @@ def validJwt(request):
             'verify_exp': True,
             'verify_iat': True,
             'verify_nbf': True},
-            audience='Asasel',
-            issuer='Asasel',
+            audience='Asasel web remote control',
+            issuer='Asasel web remote control',
             leeway=60)
         print(payload['payload'])
         return True
@@ -76,9 +76,9 @@ def sendToken(response: fastapi.Response, username: str = fastapi.Form(), passwo
     if pam.authenticate(username, password):
         now = datetime.datetime.now()
         timestamp = lambda dt: int(dt.timestamp())
-        payload = {'iss': 'Asasel',
-            'sub': 'Asasel',
-            'aud': 'Asasel',
+        payload = {'iss': 'Asasel web remote control',
+            'sub': 'Asasel web remote control',
+            'aud': 'Asasel web remote control',
             'exp': timestamp(now + datetime.timedelta(weeks=6)),
             'iat': timestamp(now),
             'nbf': timestamp(now),
