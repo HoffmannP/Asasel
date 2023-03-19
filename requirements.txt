@@ -3,5 +3,9 @@ mypy
 watchdog
 
 ###### Requirements with Version Specifiers ######
-uvicorn >= 0.18
-fastapi >= 0.68
+uvicorn >= 0.21
+fastapi >= 0.95
+python-multipart >= 0.0.6
+pyjwt[crypto] >= 2.6
+python-pam >= 2.0
+
