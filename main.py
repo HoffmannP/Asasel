@@ -1,4 +1,4 @@
-import daemon
+import daemon  # type: ignore
 import server
 
 with daemon.DaemonContext():
