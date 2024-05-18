@@ -1,0 +1,7 @@
+# SQLAlchemy
+# asgi-sessions
+watchdog
+fastapi
+fastapi_utils
+requests
+uvicorn
