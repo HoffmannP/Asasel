@@ -1,5 +1,4 @@
-// import adapter from '@sveltejs/adapter-auto'
-import adapter from '@sveltejs/adapter-static'
+import adapter from '@sveltejs/adapter-node'
 import RemoteAssets from 'vite-plugin-remote-assets'
 
 /** @type {import('@sveltejs/kit').Config} */
