@@ -3,7 +3,7 @@
 source vars
 
 ./simplepass.sh
-while false
+while true
 do
     test $(who | grep linus | wc -l) -gt 0 && break
 done

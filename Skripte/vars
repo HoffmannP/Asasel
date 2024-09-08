@@ -1,5 +1,5 @@
 USER=linus
-SIMPLE=$USER
+SIMPLEPASS=$USER
 HARDPASS=${USER^}1${USER^}
 TIME=32
-ATQID=$PWD/spielzeit.atjid
+ATQID=$PWD/.spielzeit.atjid
