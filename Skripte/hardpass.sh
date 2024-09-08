@@ -1,4 +1,5 @@
 #!/bin/bash
 
-source vars
-echo -e "$HARDPASS\n$HARDPASS\n" | sudo passwd -q $USER
+source $(dirname $0)/vars
+
+$(dirname $0)/chpwd.sh $USER $HARDPASS

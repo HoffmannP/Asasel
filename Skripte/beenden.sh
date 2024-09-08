@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source vars
+source $(dirname $0)/vars
+
 sudo killall -u $USER
 
 

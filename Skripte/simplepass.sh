@@ -1,4 +1,5 @@
 #!/bin/bash
 
-source vars
-echo -e "$SIMPLEPASS\n$SIMPLEPASS\n" | sudo passwd -q $USER
+source $(dirname $0)/vars
+
+$(dirname $0)/chpwd.sh $USER $SIMPLEPASS
