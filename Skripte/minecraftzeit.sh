@@ -9,8 +9,7 @@ function printdur {
 }
 
 total=0
-first=$[$(date +%u) - 1]
-test $first -eq 0 && first=7
+first=$[$[$[$(date +%u) + 5 ] % 7] + 1]
 for ((i=$first; i>=0; i--))
 do
     then=$[$(date +%s) - i * 60 * 60 * 24]
