@@ -1,0 +1,37 @@
+body {
+    font-size: calc(10vmin);
+    background-color: lightgrey;
+    margin: 0;
+}
+
+
+.main {
+    padding: 1rem;
+    width: calc(100vw - 2rem);
+    height: calc(100vh - 2rem);
+    background-color: lightgrey;
+    display: grid;
+    grid-template-rows: repeat(var(--rows), 1fr) 16rem;
+    gap: 1rem;
+}
+
+button {
+    font-size: inherit;
+    font-family: inherit;
+    background-color: inherit;
+}
+
+a,
+button {
+    border: 0.5rem outset black;
+    border-radius: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: black;
+}
+
+a:active, button:active {
+    border-style: inset;
+}
