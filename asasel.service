@@ -1,0 +1,15 @@
+[Unit]
+Description=Asasel web remote control
+Documentation=https://github.com/HoffmannP/Asasel
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/Asasel
+RestartSec=1
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
@@ -23,9 +24,16 @@ type Options struct {
 
 // Call saved command
 
-type GreetingOutput struct {
+type MessageOutput struct {
 	Body struct {
-		Message string `json:"message" example:"Hello, world!" doc:"Greeting message"`
+		Message string `json:"message" example:"Hello, world!" doc:"Return message"`
+	}
+}
+
+type TimeoutOutput struct {
+	Body struct {
+		Message   string `json:"message" example:"Hello, world!" doc:"Return message"`
+		Remaining int    `json:"remaining" example:"30" doc:"Remaining minutes"`
 	}
 }
 
@@ -37,29 +45,18 @@ type ReviewInput struct {
 	}
 }
 
-type AccountOutput struct {
-	Body struct {
-		Message string `json:"message" example:"Locked" doc:"Account status message"`
+type AccountInput struct {
+	Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to lock"`
+}
+
+type TimeoutInput struct {
+	Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to kill"`
+	Body    struct {
+		Duration int `path:"duration" maxLength:"30" example:"30" doc:"Time to wait"`
 	}
 }
 
 func addRoutes(api huma.API) {
-	// Register GET /greeting/{name}
-	huma.Register(api, huma.Operation{
-		OperationID: "get-greeting",
-		Method:      http.MethodGet,
-		Path:        "/greeting/{name}",
-		Summary:     "Greet a greeting",
-		Description: "Get a greeting for a person by name.",
-		Tags:        []string{"Greetings"},
-	}, func(ctx context.Context, input *struct {
-		Name string `path:"name" maxLength:"30" example:"world" doc:"Name to greet"`
-	}) (*GreetingOutput, error) {
-		resp := &GreetingOutput{}
-		resp.Body.Message = fmt.Sprintf("Hello %s!", input.Name)
-		return resp, nil
-	})
-
 	// Register POST /reviews handler.
 	huma.Register(api, huma.Operation{
 		OperationID:   "post-review",
@@ -75,16 +72,14 @@ func addRoutes(api huma.API) {
 	})
 
 	huma.Register(api, huma.Operation{
-		OperationID: "lock-acocunt",
+		OperationID: "account-lock",
 		Method:      http.MethodGet,
 		Path:        "/account/lock/{account}",
 		Summary:     "Locks account",
 		Description: "Locks the account of an existing user",
 		Tags:        []string{"Account"},
-	}, func(ctx context.Context, input *struct {
-		Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to lock"`
-	}) (*AccountOutput, error) {
-		resp := &AccountOutput{}
+	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
+		resp := &MessageOutput{}
 		cmd := exec.Command("usermod", "-e", "1", input.Account)
 		err := cmd.Run()
 		if err != nil {
@@ -97,16 +92,14 @@ func addRoutes(api huma.API) {
 	})
 
 	huma.Register(api, huma.Operation{
-		OperationID: "unlock-acocunt",
+		OperationID: "account-unlock",
 		Method:      http.MethodGet,
 		Path:        "/account/unlock/{account}",
 		Summary:     "Unlocks account",
 		Description: "Unlocks the account of an existing user",
 		Tags:        []string{"Account"},
-	}, func(ctx context.Context, input *struct {
-		Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to unlock"`
-	}) (*AccountOutput, error) {
-		resp := &AccountOutput{}
+	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
+		resp := &MessageOutput{}
 		cmd := exec.Command("usermod", "-e", "", input.Account)
 		err := cmd.Run()
 		if err != nil {
@@ -125,10 +118,8 @@ func addRoutes(api huma.API) {
 		Summary:     "Kills all processes of account",
 		Description: "Kills every single process of an existing account",
 		Tags:        []string{"Account"},
-	}, func(ctx context.Context, input *struct {
-		Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to kill"`
-	}) (*AccountOutput, error) {
-		resp := &AccountOutput{}
+	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
+		resp := &MessageOutput{}
 		cmd := exec.Command("killall", "-u", input.Account)
 		err := cmd.Run()
 		if err != nil {
@@ -141,19 +132,20 @@ func addRoutes(api huma.API) {
 	})
 
 	huma.Register(api, huma.Operation{
-		OperationID: "account-timeout",
-		Method:      http.MethodGet,
-		Path:        "/account/timeout/{account}/{duration}",
+		OperationID: "account-settimeout",
+		Method:      http.MethodPost,
+		Path:        "/timeout/{account}",
 		Summary:     "Timeout accounts session",
 		Description: "Kills every single process of an existing account after some time",
-		Tags:        []string{"Account"},
-	}, func(ctx context.Context, input *struct {
-		Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to kill"`
-		Minutes int    `path:"duration" maxLength:"30" example:"30" doc:"Time to wait"`
-	}) (*AccountOutput, error) {
-		resp := &AccountOutput{}
-		cmd := exec.Command("at", "now", "+", fmt.Sprintf("%d", input.Minutes), "min")
-		cmd.Stdin = strings.NewReader(fmt.Sprintf("killall -u '%s'; usermod -e 1 '%s'", input.Account, input.Account))
+		Tags:        []string{"Timeout"},
+	}, func(ctx context.Context, input *TimeoutInput) (*TimeoutOutput, error) {
+		resp := &TimeoutOutput{}
+		cmd := exec.Command("at", "now", "+", fmt.Sprintf("%d", input.Body.Duration), "min")
+		cmd.Stdin = strings.NewReader(fmt.Sprintf(
+			"#timeout %s\nkillall -u '%s'\nusermod -e 1 '%s'",
+			input.Account,
+			input.Account,
+			input.Account))
 		err := cmd.Run()
 		if err != nil {
 			log.Fatal(err)
@@ -161,6 +153,82 @@ func addRoutes(api huma.API) {
 			return resp, err
 		}
 		resp.Body.Message = "Timeout set"
+		resp.Body.Remaining = input.Body.Duration
+		return resp, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID: "account-gettimeout",
+		Method:      http.MethodGet,
+		Path:        "/timeout/{account}",
+		Summary:     "Get timeout",
+		Description: "Write timeouts for an account",
+		Tags:        []string{"Timeout"},
+	}, func(ctx context.Context, input *AccountInput) (*TimeoutOutput, error) {
+		resp := &TimeoutOutput{}
+		tag := fmt.Sprintf("#timeout %s", input.Account)
+		cmd := exec.Command("atq")
+		var out strings.Builder
+		cmd.Stdout = &out
+		cmd.Run()
+		for _, line := range strings.Split(out.String(), "\n") {
+			if line == "" {
+				continue
+			}
+			atid := strings.Split(line, "\t")[0]
+			cmd := exec.Command("at", "-c", atid)
+			var out strings.Builder
+			cmd.Stdout = &out
+			cmd.Run()
+			lines := strings.Split(out.String(), "\n")
+			if lines[len(lines)-4] == tag {
+				timestamp := strings.Split(line, "\t")[1][0:24]
+				exectime, err := time.ParseInLocation(time.ANSIC, timestamp, time.Local)
+				if err != nil {
+					resp.Body.Message = "Timeout unreadable"
+					return resp, nil
+				}
+				duration := time.Until(exectime).Round(time.Minute)
+				resp.Body.Message = fmt.Sprintf("Timeout is %s", strings.TrimSuffix(duration.String(), "0s"))
+				resp.Body.Remaining = int(duration.Minutes())
+				return resp, nil
+			}
+		}
+		resp.Body.Message = "Timeout not found"
+		return resp, nil
+	})
+
+	huma.Register(api, huma.Operation{
+		OperationID: "account-rmtimeout",
+		Method:      http.MethodDelete,
+		Path:        "/timeout/{account}",
+		Summary:     "Remove timeout accounts session",
+		Description: "Deletes all timeouts for an account session",
+		Tags:        []string{"Timeout"},
+	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
+		resp := &MessageOutput{}
+		tag := fmt.Sprintf("#timeout %s", input.Account)
+		cmd := exec.Command("atq")
+		var out strings.Builder
+		cmd.Stdout = &out
+		cmd.Run()
+		for _, line := range strings.Split(out.String(), "\n") {
+			if line == "" {
+				continue
+			}
+			atid := strings.Split(line, "\t")[0]
+			cmd := exec.Command("at", "-c", atid)
+			var out strings.Builder
+			cmd.Stdout = &out
+			cmd.Run()
+			lines := strings.Split(out.String(), "\n")
+			if lines[len(lines)-4] == tag {
+				exec.Command("atrm", atid).Run()
+				resp.Body.Message = "Timeout unset"
+				return resp, nil
+			}
+		}
+		resp.Body.Message = "Timeout not found"
 		return resp, nil
 	})
 
