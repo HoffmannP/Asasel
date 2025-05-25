@@ -37,14 +37,6 @@ type TimeoutOutput struct {
 	}
 }
 
-type ReviewInput struct {
-	Body struct {
-		Author  string `json:"author" maxLength:"10" doc:"Author of the review"`
-		Rating  int    `json:"rating" minimum:"1" maximum:"5" doc:"Rating from 1 to 5"`
-		Message string `json:"message,omitempty" maxLength:"100" doc:"Review message"`
-	}
-}
-
 type AccountInput struct {
 	Account string `path:"account" maxLength:"30" example:"linus" doc:"Account to lock"`
 }
@@ -57,25 +49,11 @@ type TimeoutInput struct {
 }
 
 func addRoutes(api huma.API) {
-	// Register POST /reviews handler.
-	huma.Register(api, huma.Operation{
-		OperationID:   "post-review",
-		Method:        http.MethodPost,
-		Path:          "/reviews",
-		Summary:       "Gret a greeting",
-		Description:   "Post a review.",
-		Tags:          []string{"Reviews"},
-		DefaultStatus: http.StatusCreated,
-	}, func(ctx context.Context, i *ReviewInput) (*struct{}, error) {
-		// TODO: save review in data store
-		return nil, nil
-	})
-
 	huma.Register(api, huma.Operation{
 		OperationID: "account-lock",
 		Method:      http.MethodGet,
 		Path:        "/account/lock/{account}",
-		Summary:     "Locks account",
+		Summary:     "Lock account",
 		Description: "Locks the account of an existing user",
 		Tags:        []string{"Account"},
 	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
@@ -95,7 +73,7 @@ func addRoutes(api huma.API) {
 		OperationID: "account-unlock",
 		Method:      http.MethodGet,
 		Path:        "/account/unlock/{account}",
-		Summary:     "Unlocks account",
+		Summary:     "Unlock account",
 		Description: "Unlocks the account of an existing user",
 		Tags:        []string{"Account"},
 	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
@@ -115,8 +93,8 @@ func addRoutes(api huma.API) {
 		OperationID: "account-killall",
 		Method:      http.MethodGet,
 		Path:        "/account/killall/{account}",
-		Summary:     "Kills all processes of account",
-		Description: "Kills every single process of an existing account",
+		Summary:     "Kill all processes",
+		Description: "Kills all processes of an existing account",
 		Tags:        []string{"Account"},
 	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
 		resp := &MessageOutput{}
@@ -135,8 +113,8 @@ func addRoutes(api huma.API) {
 		OperationID: "account-settimeout",
 		Method:      http.MethodPost,
 		Path:        "/timeout/{account}",
-		Summary:     "Timeout accounts session",
-		Description: "Kills every single process of an existing account after some time",
+		Summary:     "Set session timeout",
+		Description: "Sets a session timeout for the specified account",
 		Tags:        []string{"Timeout"},
 	}, func(ctx context.Context, input *TimeoutInput) (*TimeoutOutput, error) {
 		resp := &TimeoutOutput{}
@@ -161,8 +139,8 @@ func addRoutes(api huma.API) {
 		OperationID: "account-gettimeout",
 		Method:      http.MethodGet,
 		Path:        "/timeout/{account}",
-		Summary:     "Get timeout",
-		Description: "Write timeouts for an account",
+		Summary:     "Get session timeout",
+		Description: "Gets the remaining duration until the next session timeout for the specified account",
 		Tags:        []string{"Timeout"},
 	}, func(ctx context.Context, input *AccountInput) (*TimeoutOutput, error) {
 		resp := &TimeoutOutput{}
@@ -202,8 +180,8 @@ func addRoutes(api huma.API) {
 		OperationID: "account-rmtimeout",
 		Method:      http.MethodDelete,
 		Path:        "/timeout/{account}",
-		Summary:     "Remove timeout accounts session",
-		Description: "Deletes all timeouts for an account session",
+		Summary:     "Remove session timeout",
+		Description: "Removes the first found session timeout for the specified account",
 		Tags:        []string{"Timeout"},
 	}, func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
 		resp := &MessageOutput{}
