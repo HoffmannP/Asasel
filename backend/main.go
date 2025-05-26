@@ -26,11 +26,8 @@ type MessageOutput struct {
 }
 
 func addRoutes(api huma.API) {
-	accounts := huma.NewGroup(api, "/accounts")
-	RegisterAccountOperations(accounts)
-
-	timeouts := huma.NewGroup(api, "/timeouts")
-	RegisterAccountOperations(timeouts)
+	RegisterAccountOperations(huma.NewGroup(api, "/accounts"))
+	RegisterTimeoutOperations(huma.NewGroup(api, "/timeouts"))
 
 	/* For later for meta */
 	// Add new Command
