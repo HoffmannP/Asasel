@@ -1,7 +1,7 @@
-TODO
-====
+# TODO
 
-- Gui
-- Service Discovery
-- SystemD
-- Einzelne Programme sperren/freigeben/zeitbeschränken
+- (mobile) Gui
+- service discovery
+- systemd integration
+- separate API from OS call
+- lock/allow/timeout single programs
