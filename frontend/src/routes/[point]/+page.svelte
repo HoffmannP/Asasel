@@ -1,13 +1,13 @@
 <script>
     let { data } = $props()
 
-    let commands = {
+    let commands = [
         "lock",
         "unlock",
         "kill",
         "timeout 30",
         "timeout 60"
-    }
+    ]
 
     function call(command) {
         return () => fetch(`/api/${data.point}/${command}`, { method: "POST" })
