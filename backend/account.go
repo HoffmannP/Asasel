@@ -100,7 +100,6 @@ func RegisterAccountOperations(api huma.API) {
 					return resp, nil
 				}
 				if (firstLogin == time.Time{}) || (firstLogin.Compare(logintime) == 1) {
-					println("tausch")
 					firstLogin = logintime
 				}
 			}
