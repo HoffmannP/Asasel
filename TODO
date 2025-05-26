@@ -1,6 +1,7 @@
 # TODO
 
 - (mobile) Gui
+- CORS
 - Full web server
 - service discovery
 - systemd integration
