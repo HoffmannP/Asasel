@@ -18,7 +18,14 @@ type AccountInput struct {
 type AccountLockInput struct {
 	AccountInput
 	Body struct {
-		LockState bool `path:"lockstatee" doc:"Lockstate (true = locked)"`
+		LockState bool `path:"lockstate" doc:"Lockstate (true = locked)"`
+	}
+}
+
+type AccountLockOutput struct {
+	Body struct {
+		Message   string `json:"message" example:"Hello, world!" doc:"Return message"`
+		LockState bool   `json:"lockstate" example:"true" doc:"Lockstate (true = locked)"`
 	}
 }
 
@@ -30,13 +37,13 @@ type AccountTimeOutput struct {
 }
 
 func RegisterAccountOperations(api huma.API) {
-	huma.Get(api, "/lock/{account}", func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
+	huma.Get(api, "/lock/{account}", func(ctx context.Context, input *AccountInput) (*AccountLockOutput, error) {
 		cmd := exec.Command("passwd", "-S", input.Account)
 		var out strings.Builder
 		cmd.Stdout = &out
 		err := cmd.Run()
 
-		resp := &MessageOutput{}
+		resp := &AccountLockOutput{}
 		if err != nil {
 			log.Fatal(err)
 			resp.Body.Message = fmt.Sprintf("Error getting lockstate for %s", input.Account)
@@ -44,8 +51,10 @@ func RegisterAccountOperations(api huma.API) {
 		}
 
 		lockprefix := "un"
+		resp.Body.LockState = false
 		if strings.Split(out.String(), " ")[1] == "L" {
 			lockprefix = ""
+			resp.Body.LockState = true
 		}
 
 		resp.Body.Message = fmt.Sprintf("Account %s %slocked", lockprefix, input.Account)
@@ -107,6 +116,7 @@ func RegisterAccountOperations(api huma.API) {
 
 		if (firstLogin == time.Time{}) {
 			resp.Body.Message = fmt.Sprintf("Account %s not logged in", input.Account)
+			resp.Body.Duration = -1
 		} else {
 			duration := time.Since(firstLogin).Round(time.Minute)
 			resp.Body.Message = fmt.Sprintf("Account logged in since %s", strings.TrimSuffix(duration.String(), "0s"))

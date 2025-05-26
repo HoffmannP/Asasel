@@ -76,6 +76,7 @@ func RegisterTimeoutOperations(api huma.API) {
 			}
 		}
 		resp.Body.Message = "Timeout not found"
+		resp.Body.Remaining = -1
 		return resp, nil
 	})
 

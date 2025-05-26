@@ -1,6 +1,7 @@
 # TODO
 
 - (mobile) Gui
+- Full web server
 - service discovery
 - systemd integration
 - separate API from OS call
