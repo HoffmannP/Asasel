@@ -44,9 +44,13 @@ func main() {
 	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
 		// Create a new router & API
 		router := chi.NewMux()
-		api := humachi.New(router, huma.DefaultConfig("My API", "1.0.0"))
 
-		addRoutes(api)
+		router.Route("/api", func(api_route chi.Router) {
+			api := humachi.New(api_route, huma.DefaultConfig("My API", "1.0.0"))
+			addRoutes(api)
+		})
+
+		router.Get("/*", http.FileServer(http.Dir("/static")).ServeHTTP)
 
 		hooks.OnStart(func() {
 			fmt.Printf("Starting server on port %d...\n", options.Port)
