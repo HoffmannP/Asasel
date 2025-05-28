@@ -7,7 +7,7 @@
     const USER = 'linus'
 
     let { data } = $props()
-    let endpoint = `http://${data.point}:${PORT}`
+    let endpoint = `http://${data.point}:${PORT}/api`
 </script>
 
 <div class="main">
