@@ -23,7 +23,7 @@
     {#await state}
     <div class="loading">... loading ...</div>
     {:then usertime}
-    {#if usertime.duration == -1}
+    {#if usertime.duration == 1}
     <div class="silent">no login</div>
     {:else}
     <button onclick={kill}>

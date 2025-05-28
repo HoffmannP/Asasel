@@ -11,10 +11,10 @@
 </script>
 
 <div class="main">
-    <Loginstate {endpoint} user={USER} />
     <Lockstate {endpoint} user={USER} />
+    <Loginstate {endpoint} user={USER} />
     <Timeout {endpoint} user={USER} />
-    <div><a href="/">back</a></div>
+    <div class="component"><a href="/">‹ back</a></div>
 </div>
 
 <style>

@@ -2,7 +2,7 @@
     import { onMount } from 'svelte'
 
     let { endpoint, user } = $props()
-    let state = $state({ remaining: 1 })
+    let state = $state({ remaining: -1 })
     let varTimeout = $state(15)
 
     async function loadtimeout () {
@@ -37,7 +37,7 @@
     {#if timeout.remaining == -1}
     <button class="min" style="grid-area: preset1" onclick={_ => setTimeout(30)}>30</button>
     <button class="min" style="grid-area: preset2" onclick={_ => setTimeout(60)}>60</button>
-    <button style="grid-area: minus" onclick={() => varTimeout -= 5}>-</button>
+    <button disabled={ varTimeout <= 5 } style="grid-area: minus" onclick={() => varTimeout -= 5}>−</button>
     <button class="min" style="grid-area: valset" onclick={_ => setTimeout({varTimeout})}>{varTimeout}</button>
     <button style="grid-area: plus" onclick={() => varTimeout += 5}>+</button>
     {:else}
@@ -52,10 +52,10 @@
 <style>
 .timeout {
     display: grid;
-    grid-template: repeat(2, 1fr) / repeat(6, 1fr);
+    grid-template: repeat(2, 1fr) / repeat(4, 1fr);
     grid-template-areas:
-        "preset1 preset1 preset1 preset2 preset2 preset2"
-        "minus   minus   valset  valset   plus  plus";
+        "preset1 preset1 preset2 preset2"
+        "minus   valset  valset   plus  ";
     gap: 0;
 }
 
@@ -65,6 +65,6 @@
 }
 
 .allgrid {
-    grid-area: 1 / 7 / 3 / 1;
+    grid-area: 1 / 5 / 3 / 1;
 }
 </style>
