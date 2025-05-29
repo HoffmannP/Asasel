@@ -8,13 +8,9 @@
     // let { data } = $props()
     // let endpoint = `http://{data.point}:${PORT}/api`
     const endpoint = '/api'
-
-    function swipeLeft(event) {
-        direction = alert("Swipe")
-    }
 </script>
 
-<div class="main" use:swipe={{ timeframe: 300, minSwipeDistance: 100, touchAction: 'pan-y' }} on:swipe={swipeLeft}>
+<div class="main">
     <Lockstate {endpoint} user={USER} />
     <Loginstate {endpoint} user={USER} />
     <Timeout {endpoint} user={USER} />

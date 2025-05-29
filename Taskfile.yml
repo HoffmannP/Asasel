@@ -41,17 +41,27 @@ tasks:
       - cp -R ../frontend/build static
       - go build .
 
-  install:
-    aliases: [ default ]
+  install_service:
     desc: Install the service
-    deps: [ build_backend ]
+    sources:
+      - service.tpl
+    generates:
+      - "{{.SERVICEFILE}}"
+    cmds:
+      - sed 's%$NAME%{{.NAME}}%g;s%$FULLNAME%{{.FULLNAME}}%g' service.tpl | sudo tee {{.SERVICEFILE}} >/dev/null
+      - sudo systemctl daemon-reload
+      - sudo systemctl enable {{.SERVICENAME}}
+
+  update_service:
+    aliases: [ default, update ]
+    desc: Update the service
+    deps: [ install_service, build_backend ]
+    sources:
+      - backend/{{.NAME}}
     cmds:
       - sudo systemctl stop {{.SERVICENAME}}
       - sudo cp backend/{{.NAME}} {{.FULLNAME}}
-      - sed 's%$NAME%{{.NAME}}%g;s%$FULLNAME%{{.FULLNAME}}%g' service.tpl | sudo tee {{.SERVICEFILE}} >/dev/null
-      - sudo systemctl daemon-reload
       - sudo systemctl start {{.SERVICENAME}}
-      - sudo systemctl enable {{.SERVICENAME}}
 
   clean:
     desc: Clean every generated file
