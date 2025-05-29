@@ -46,6 +46,7 @@ tasks:
     desc: Install the service
     deps: [ build_backend ]
     cmds:
+      - sudo systemctl stop {{.SERVICENAME}}
       - sudo cp backend/{{.NAME}} {{.FULLNAME}}
       - sed 's%$NAME%{{.NAME}}%g;s%$FULLNAME%{{.FULLNAME}}%g' service.tpl | sudo tee {{.SERVICEFILE}} >/dev/null
       - sudo systemctl daemon-reload

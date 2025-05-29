@@ -1,28 +1,28 @@
 <script>
-    import slugify from 'slugify'
+    import Loginstate from './loginstate.svelte'
+    import Lockstate from './lockstate.svelte'
+    import Timeout from './timeout.svelte'
 
-    let points = [
-        "nura",
-        "yoga"
-    ]
+    const USER = 'linus'
+    // const PORT = 8888
+    // let { data } = $props()
+    // let endpoint = `http://{data.point}:${PORT}/api`
+    const endpoint = '/api'
+
+    function swipeLeft(event) {
+        direction = alert("Swipe")
+    }
 </script>
 
-<div class="main">
-    {#each points as point}
-    <a href="/{slugify(point)}">{point}</a>
-    {/each}
+<div class="main" use:swipe={{ timeframe: 300, minSwipeDistance: 100, touchAction: 'pan-y' }} on:swipe={swipeLeft}>
+    <Lockstate {endpoint} user={USER} />
+    <Loginstate {endpoint} user={USER} />
+    <Timeout {endpoint} user={USER} />
+    <div class="component"><a href="/server">‹ Server</a></div>
 </div>
-
 
 <style>
 .main {
-    padding: 1rem;
-    width: calc(100vw - 2.67rem);
-    height: calc(100vh - 2.67rem);
-    background-color: lightgrey;
-    display: grid;
-    grid-template-rows: repeat(2, 1fr);
-    gap: 1.67rem;
-
+    grid-template-rows: repeat(3, 1fr) 5rem;
 }
 </style>
