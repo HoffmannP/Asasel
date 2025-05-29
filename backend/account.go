@@ -35,101 +35,129 @@ type AccountTimeOutput struct {
 	}
 }
 
+func getLockstate(account string) (bool, error) {
+	cmd := exec.Command("passwd", "-S", account)
+	var out strings.Builder
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return false, err
+	}
+	return strings.Split(out.String(), " ")[1] == "L", nil
+}
+
+func setLockstate(account string, lockstate bool) error {
+	var lockCommand string
+
+	if lockstate {
+		lockCommand = "-e '1'"
+		// lockCommand = "-L"
+	} else {
+		lockCommand = "-e ''"
+		// lockCommand = "-U"
+	}
+
+	return exec.Command("usermod", lockCommand, account).Run()
+}
+
+func getLogintime(account string) (int, error) {
+	var out strings.Builder
+	cmd := exec.Command("who")
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		return -1, err
+	}
+
+	var firstLogin time.Time
+	for _, line := range strings.Split(out.String(), "\n") {
+		if strings.HasPrefix(line, account) {
+			logintime, err := time.ParseInLocation("2006-01-02 15:04", line[22:38], time.Local)
+			if err != nil {
+				return 0, err
+			}
+			if (firstLogin == time.Time{}) || (firstLogin.Compare(logintime) == 1) {
+				firstLogin = logintime
+			}
+		}
+	}
+	var minutes int
+	if (firstLogin == time.Time{}) {
+		minutes = -1
+	} else {
+		duration := time.Since(firstLogin).Round(time.Minute)
+		minutes = int(duration.Minutes())
+	}
+	return minutes, nil
+}
+
+func killall(account string) error {
+	return exec.Command("killall", "-u", account).Run()
+}
+
 func RegisterAccountOperations(api huma.API) {
 	huma.Get(api, "/lock/{account}", func(ctx context.Context, input *AccountInput) (*AccountLockOutput, error) {
-		cmd := exec.Command("passwd", "-S", input.Account)
-		var out strings.Builder
-		cmd.Stdout = &out
-		err := cmd.Run()
-
 		resp := &AccountLockOutput{}
+		locked, err := getLockstate(input.Account)
 		if err != nil {
-			resp.Body.Message = fmt.Sprintf("Error getting lockstate for %s", input.Account)
+			resp.Body.Message = "Error getting lockstate"
 			return resp, err
 		}
-
-		lockprefix := "un"
-		resp.Body.LockState = false
-		if strings.Split(out.String(), " ")[1] == "L" {
-			lockprefix = ""
-			resp.Body.LockState = true
+		if locked {
+			resp.Body.Message = "Account locked"
+		} else {
+			resp.Body.Message = "Account unlocked"
 		}
-
-		resp.Body.Message = fmt.Sprintf("Account %s %slocked", lockprefix, input.Account)
 		return resp, nil
 	})
 
 	huma.Post(api, "/lock/{account}", func(ctx context.Context, input *AccountLockInput) (*MessageOutput, error) {
-		// lock via lockCommand
-		lockCommand := "-e ''"
-		// lockCommand := "-U"
-		lockprefix := "un"
+		resp := &MessageOutput{}
+		err := setLockstate(input.Account, input.Body.LockState)
+
+		var lockaction string
 		if input.Body.LockState {
-			// lock via lockCommand
-			lockCommand = "-e '1'"
-			// lockCommand = "-L"
-			lockprefix = ""
+			lockaction = "locked"
+		} else {
+			lockaction = "unlocked"
 		}
 
-		cmd := exec.Command("usermod", lockCommand, input.Account)
-		err := cmd.Run()
-
-		resp := &MessageOutput{}
 		if err != nil {
-			resp.Body.Message = fmt.Sprintf("Error %slocking %s", lockprefix, input.Account)
+			resp.Body.Message = "Error setting account to " + lockaction
 			return resp, err
 		}
-
-		resp.Body.Message = fmt.Sprintf("Account %s %slocked", lockprefix, input.Account)
+		resp.Body.Message = "Account " + lockaction
 		return resp, nil
 	})
 
 	huma.Get(api, "/time/{account}", func(ctx context.Context, input *AccountInput) (*AccountTimeOutput, error) {
-		cmd := exec.Command("who")
-		var out strings.Builder
-		cmd.Stdout = &out
-		err := cmd.Run()
-
 		resp := &AccountTimeOutput{}
+		minutes, err := getLogintime(input.Account)
+		resp.Body.Duration = minutes
 		if err != nil {
-			resp.Body.Message = fmt.Sprintf("Error getting time for %s", input.Account)
+			if minutes == -1 {
+				resp.Body.Message = "Error getting logintime"
+			} else {
+				resp.Body.Message = "Timeout unreadable"
+			}
 			return resp, err
 		}
-
-		var firstLogin time.Time
-		for _, line := range strings.Split(out.String(), "\n") {
-			if strings.HasPrefix(line, input.Account) {
-				logintime, err := time.ParseInLocation("2006-01-02 15:04", line[22:38], time.Local)
-				if err != nil {
-					resp.Body.Message = "Timeout unreadable"
-					return resp, nil
-				}
-				if (firstLogin == time.Time{}) || (firstLogin.Compare(logintime) == 1) {
-					firstLogin = logintime
-				}
-			}
-		}
-
-		if (firstLogin == time.Time{}) {
-			resp.Body.Message = fmt.Sprintf("Account %s not logged in", input.Account)
-			resp.Body.Duration = -1
+		if minutes == -1 {
+			resp.Body.Message = "Account not logged in"
 		} else {
-			duration := time.Since(firstLogin).Round(time.Minute)
-			resp.Body.Message = fmt.Sprintf("Account logged in since %s", strings.TrimSuffix(duration.String(), "0s"))
-			resp.Body.Duration = int(duration.Minutes())
+			resp.Body.Message = fmt.Sprintf("Account logged in for %d min", minutes)
 		}
 		return resp, nil
 	})
 
 	huma.Get(api, "/killall/{account}", func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
 		resp := &MessageOutput{}
-		cmd := exec.Command("killall", "-u", input.Account)
-		err := cmd.Run()
+		err := killall(input.Account)
 		if err != nil {
-			resp.Body.Message = fmt.Sprintf("Error killing all processes of %s", input.Account)
-			return resp, err
+			resp.Body.Message = "Error killing all processes"
+		} else {
+			resp.Body.Message = "All processes killed"
 		}
-		resp.Body.Message = fmt.Sprintf("All processes of %s killed", input.Account)
-		return resp, nil
+		return resp, err
 	})
 }
