@@ -22,6 +22,7 @@ tasks:
       - build/_app/env.js
       - build/_app/version.json
     cmds:
+      - npm install
       - npm run build
 
   build_backend:
