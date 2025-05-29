@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -36,7 +35,6 @@ func RegisterTimeoutOperations(api huma.API) {
 			input.Account))
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
 			resp.Body.Message = "Error setting timeout"
 			return resp, err
 		}

@@ -18,7 +18,7 @@
     }
 
     onMount(() => {
-        // state = lockstate()
+        state = lockstate()
     })
 </script>
 

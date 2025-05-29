@@ -1,7 +1,6 @@
 # TODO
-
-- Full web server
-- service discovery
 - systemd integration
+- server selection
 - separate API from OS call
+- update mechanism
 - lock/allow/timeout single programs

@@ -26,7 +26,7 @@
     }
 
     onMount(() => {
-        // state = loadtimeout()
+        state = loadtimeout()
     })
 </script>
 

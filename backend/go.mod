@@ -1,4 +1,4 @@
-module github.com/H0ffmann/Asael
+module github.com/H0ffmann/Asasel
 
 go 1.22
 

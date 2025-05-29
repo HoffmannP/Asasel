@@ -1,12 +1,12 @@
 [Unit]
-Description=Asasel web remote control
+Description=$NAME web remote control
 Documentation=https://github.com/HoffmannP/Asasel
 After=network.target
 StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/Asasel
+ExecStart=$FULLNAME
 RestartSec=1
 Restart=always
 User=root

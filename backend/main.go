@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 
@@ -12,6 +13,9 @@ import (
 
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
+
+//go:embed all:static/*
+var gui embed.FS
 
 // Options for the CLI
 type Options struct {
@@ -29,15 +33,18 @@ type MessageOutput struct {
 func addRoutes(api huma.API) {
 	RegisterAccountOperations(huma.NewGroup(api, "/accounts"))
 	RegisterTimeoutOperations(huma.NewGroup(api, "/timeouts"))
+}
 
-	/* For later for meta */
-	// Add new Command
+func FileServer(w http.ResponseWriter, r *http.Request) {
+	path := "static" + r.URL.Path
 
-	// Update Command
+	if path[len(path)-1] == '/' {
+		path += "index.html"
+	}
 
-	// Remove Command
+	println(path)
 
-	// Call Command
+	http.ServeFileFS(w, r, gui, path)
 }
 
 func main() {
@@ -52,11 +59,11 @@ func main() {
 			addRoutes(api)
 		})
 
-		router.Get("/*", http.FileServer(http.Dir("static")).ServeHTTP)
+		router.Get("/*", FileServer)
 
 		hooks.OnStart(func() {
 			fmt.Printf("Starting server on port %d...\n", options.Port)
-			http.ListenAndServe(fmt.Sprintf(":%d", options.Port), router)
+			http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", options.Port), router)
 		})
 	})
 

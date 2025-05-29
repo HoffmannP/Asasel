@@ -3,11 +3,11 @@
     import Lockstate from './lockstate.svelte'
     import Timeout from './timeout.svelte'
 
-    const PORT = 8888
     const USER = 'linus'
-
-    let { data } = $props()
-    let endpoint = `http://${data.point}:${PORT}/api`
+    // const PORT = 8888
+    // let { data } = $props()
+    // let endpoint = `http://{data.point}:${PORT}/api`
+    const endpoint = '/api'
 </script>
 
 <div class="main">

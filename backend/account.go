@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -45,7 +44,6 @@ func RegisterAccountOperations(api huma.API) {
 
 		resp := &AccountLockOutput{}
 		if err != nil {
-			log.Fatal(err)
 			resp.Body.Message = fmt.Sprintf("Error getting lockstate for %s", input.Account)
 			return resp, err
 		}
@@ -78,7 +76,6 @@ func RegisterAccountOperations(api huma.API) {
 
 		resp := &MessageOutput{}
 		if err != nil {
-			log.Fatal(err)
 			resp.Body.Message = fmt.Sprintf("Error %slocking %s", lockprefix, input.Account)
 			return resp, err
 		}
@@ -95,7 +92,6 @@ func RegisterAccountOperations(api huma.API) {
 
 		resp := &AccountTimeOutput{}
 		if err != nil {
-			log.Fatal(err)
 			resp.Body.Message = fmt.Sprintf("Error getting time for %s", input.Account)
 			return resp, err
 		}
@@ -130,7 +126,6 @@ func RegisterAccountOperations(api huma.API) {
 		cmd := exec.Command("killall", "-u", input.Account)
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
 			resp.Body.Message = fmt.Sprintf("Error killing all processes of %s", input.Account)
 			return resp, err
 		}

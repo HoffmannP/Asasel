@@ -15,7 +15,7 @@
     }
 
     onMount(() => {
-        // state = logintime()
+        state = logintime()
     })
 </script>
 
