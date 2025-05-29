@@ -7,6 +7,9 @@
     async function lock (lock) {
         await fetch(`${endpoint}/accounts/lock/${user}`, {
             method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({ lockstate: lock }),
         })
         state = lockstate()

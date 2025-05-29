@@ -4,9 +4,6 @@
     import Timeout from './timeout.svelte'
 
     const USER = 'linus'
-    // const PORT = 8888
-    // let { data } = $props()
-    // let endpoint = `http://{data.point}:${PORT}/api`
     const endpoint = '/api'
 </script>
 

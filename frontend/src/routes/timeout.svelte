@@ -20,6 +20,9 @@
     async function delTimeout (duration) {
         await fetch(`${endpoint}/timeouts/${user}`, {
             method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({ duration }),
         })
         state = loadtimeout()
