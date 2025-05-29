@@ -1,5 +1,4 @@
 # TODO
-- systemd integration
 - server selection
 - separate API from OS call
 - update mechanism
