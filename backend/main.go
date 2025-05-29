@@ -6,11 +6,10 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humachi"
-	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
@@ -43,25 +42,16 @@ func FileServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Create a CLI app which takes a port option.
-	cli := humacli.New(func(hooks humacli.Hooks, _ *any) {
-		// Create a new router & API
-		router := chi.NewMux()
-		router.Use(middleware.Logger)
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
 
-		router.Route("/api", func(api_route chi.Router) {
-			api := humachi.New(api_route, huma.DefaultConfig("My API", "1.0.0"))
-			addRoutes(api)
-		})
-
-		router.Get("/*", FileServer)
-
-		hooks.OnStart(func() {
-			fmt.Printf("Starting server on port %d...\n", PORT)
-			http.ListenAndServe(fmt.Sprintf("%d", PORT), router)
-		})
+	router.Route("/api", func(api_route chi.Router) {
+		api := humachi.New(api_route, huma.DefaultConfig("My API", "1.0.0"))
+		addRoutes(api)
 	})
 
-	// Run the CLI. When passed no commands, it starts the server.
-	cli.Run()
+	router.Get("/*", FileServer)
+
+	fmt.Printf("Starting server on port %d...\n", PORT)
+	http.ListenAndServe(fmt.Sprintf(":%d", PORT), router)
 }
