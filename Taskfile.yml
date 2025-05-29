@@ -24,6 +24,8 @@ tasks:
     cmds:
       - npm install
       - npm run build
+      - rm -rf ../backend/static
+      - cp -R build ../backend/static
 
   build_backend:
     aliases: [ build ]
@@ -34,11 +36,10 @@ tasks:
       - account.go
       - timeout.go
       - main.go
+      - static/*
     generates:
       - "{{.NAME}}"
     cmds:
-      - rm -rf static
-      - cp -R ../frontend/build static
       - go build .
 
   install_service:
