@@ -17,12 +17,7 @@ import (
 //go:embed all:static/*
 var gui embed.FS
 
-// Options for the CLI
-type Options struct {
-	Port int `help:"Port to listen on" short:"p" default:"8888"`
-}
-
-// Call saved command
+const PORT = 2727
 
 type MessageOutput struct {
 	Body struct {
@@ -49,7 +44,7 @@ func FileServer(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// Create a CLI app which takes a port option.
-	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
+	cli := humacli.New(func(hooks humacli.Hooks, _ *any) {
 		// Create a new router & API
 		router := chi.NewMux()
 		router.Use(middleware.Logger)
@@ -62,8 +57,8 @@ func main() {
 		router.Get("/*", FileServer)
 
 		hooks.OnStart(func() {
-			fmt.Printf("Starting server on port %d...\n", options.Port)
-			http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", options.Port), router)
+			fmt.Printf("Starting server on port %d...\n", PORT)
+			http.ListenAndServe(fmt.Sprintf("%d", PORT), router)
 		})
 	})
 
