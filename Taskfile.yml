@@ -41,6 +41,7 @@ tasks:
       - "{{.NAME}}"
     cmds:
       - go build .
+      - cp "{{.NAME}}" ../
 
   install_service:
     desc: Install the service
@@ -58,10 +59,10 @@ tasks:
     desc: Update the service
     deps: [ install_service, build_backend ]
     sources:
-      - backend/{{.NAME}}
+      - "{{.NAME}}"
     cmds:
       - sudo systemctl stop {{.SERVICENAME}}
-      - sudo cp backend/{{.NAME}} {{.FULLNAME}}
+      - sudo cp {{.NAME}} {{.FULLNAME}}
       - sudo systemctl start {{.SERVICENAME}}
 
   clean:
@@ -69,4 +70,5 @@ tasks:
     cmds:
       - rm -rf frontend/build
       - rm -rf backend/static
+      - rm -f {{.NAME}}
       - rm -f backend/{{.NAME}}

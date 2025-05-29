@@ -2,10 +2,11 @@
     import { onMount } from 'svelte'
 
     let { endpoint, user } = $props()
-    let state = $state({ duration: 0 })
+    let state = $state({ duration: -1 })
 
     async function kill () {
-        await fetch(`${endpoint}/accounts/kill/${user}`)
+        await fetch(`${endpoint}/accounts/killall/${user}`)
+        await (new Promise(_ => setTimeout(_, 1000)))
         state = logintime()
     }
 
@@ -23,7 +24,7 @@
     {#await state}
     <div class="loading">... loading ...</div>
     {:then usertime}
-    {#if usertime.duration == 1}
+    {#if usertime.duration == -1}
     <div class="silent">no login</div>
     {:else}
     <button onclick={kill}>

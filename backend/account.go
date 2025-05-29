@@ -36,28 +36,39 @@ type AccountTimeOutput struct {
 }
 
 func getLockstate(account string) (bool, error) {
-	cmd := exec.Command("passwd", "-S", account)
+	cmd := exec.Command("chage", "-i", "-l", account)
+	cmd.Env = append(cmd.Env, "LC_ALL=en_US")
 	var out strings.Builder
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
 		return false, err
 	}
-	return strings.Split(out.String(), " ")[1] == "L", nil
+	exp_str := strings.Trim(strings.Split(strings.Split(out.String(), "\n")[3], ":")[1], " ")
+	if exp_str == "never" {
+		return false, nil
+	}
+	exp_date, err := time.Parse("2006-01-02", exp_str)
+	if err != nil {
+		return false, err
+	}
+	days := time.Since(exp_date).Hours() / 24
+	return days > 1, nil
 }
 
 func setLockstate(account string, lockstate bool) error {
-	var lockCommand string
+	var expiration string
 
 	if lockstate {
-		lockCommand = "-e '1'"
+		expiration = "1"
 		// lockCommand = "-L"
 	} else {
-		lockCommand = "-e ''"
+		expiration = ""
 		// lockCommand = "-U"
 	}
 
-	return exec.Command("usermod", lockCommand, account).Run()
+	cmd := exec.Command("usermod", "--expiredate", expiration, account)
+	return cmd.Run()
 }
 
 func getLogintime(account string) (int, error) {
@@ -81,6 +92,7 @@ func getLogintime(account string) (int, error) {
 			}
 		}
 	}
+
 	var minutes int
 	if (firstLogin == time.Time{}) {
 		minutes = -1
@@ -103,6 +115,7 @@ func RegisterAccountOperations(api huma.API) {
 			resp.Body.Message = "Error getting lockstate"
 			return resp, err
 		}
+		resp.Body.LockState = locked
 		if locked {
 			resp.Body.Message = "Account locked"
 		} else {

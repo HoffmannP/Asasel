@@ -31,13 +31,9 @@ func addRoutes(api huma.API) {
 
 func FileServer(w http.ResponseWriter, r *http.Request) {
 	path := "static" + r.URL.Path
-
 	if path[len(path)-1] == '/' {
 		path += "index.html"
 	}
-
-	println(path)
-
 	http.ServeFileFS(w, r, gui, path)
 }
 

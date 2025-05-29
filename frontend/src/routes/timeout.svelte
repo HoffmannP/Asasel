@@ -12,18 +12,18 @@
 
     async function setTimeout (duration) {
         await fetch(`${endpoint}/timeouts/${user}`, {
-            method: 'DELETE'
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ duration }),
         })
         state = loadtimeout()
     }
 
     async function delTimeout (duration) {
         await fetch(`${endpoint}/timeouts/${user}`, {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ duration }),
+            method: 'DELETE'
         })
         state = loadtimeout()
     }
@@ -41,7 +41,7 @@
     <button class="min" style="grid-area: preset1" onclick={_ => setTimeout(30)}>30</button>
     <button class="min" style="grid-area: preset2" onclick={_ => setTimeout(60)}>60</button>
     <button disabled={ varTimeout <= 5 } style="grid-area: minus" onclick={() => varTimeout -= 5}>−</button>
-    <button class="min" style="grid-area: valset" onclick={_ => setTimeout({varTimeout})}>{varTimeout}</button>
+    <button class="min" style="grid-area: valset" onclick={_ => setTimeout(varTimeout)}>{varTimeout}</button>
     <button style="grid-area: plus" onclick={() => varTimeout += 5}>+</button>
     {:else}
     <button class="allgrid removeTimeout" onclick={delTimeout}>remove Timeout</button>
