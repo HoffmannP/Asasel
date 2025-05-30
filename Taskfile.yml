@@ -1,0 +1,74 @@
+# https://taskfile.dev/
+
+version: '3'
+
+vars:
+  NAME: Asasel
+  INSTALL_PATH: /usr/local/bin/
+  FULLNAME: "{{trimSuffix \"/\" .INSTALL_PATH}}/{{.NAME}}"
+  SERVICENAME: "{{lower .NAME}}"
+  SERVICEFILE: /etc/systemd/system/{{.SERVICENAME}}.service
+
+tasks:
+  build_frontend:
+    desc: Build the gui
+    dir: frontend
+    sources:
+      - src/**/*.svelte
+      - src/**/*.js
+      - static/*
+    generates:
+      - build/index.html
+      - build/_app/env.js
+      - build/_app/version.json
+    cmds:
+      - npm install
+      - npm run build
+      - rm -rf ../backend/static
+      - cp -R build ../backend/static
+
+  build_backend:
+    aliases: [ build ]
+    desc: Build the server
+    deps: [ build_frontend ]
+    dir: backend
+    sources:
+      - account.go
+      - timeout.go
+      - main.go
+      - static/*
+    generates:
+      - "{{.NAME}}"
+    cmds:
+      - go build .
+      - cp "{{.NAME}}" ../
+
+  install_service:
+    desc: Install the service
+    sources:
+      - service.tpl
+    generates:
+      - "{{.SERVICEFILE}}"
+    cmds:
+      - sed 's%$NAME%{{.NAME}}%g;s%$FULLNAME%{{.FULLNAME}}%g' service.tpl | sudo tee {{.SERVICEFILE}} >/dev/null
+      - sudo systemctl daemon-reload
+      - sudo systemctl enable {{.SERVICENAME}}
+
+  update_service:
+    aliases: [ default, update ]
+    desc: Update the service
+    deps: [ install_service, build_backend ]
+    sources:
+      - "{{.NAME}}"
+    cmds:
+      - sudo systemctl stop {{.SERVICENAME}}
+      - sudo cp {{.NAME}} {{.FULLNAME}}
+      - sudo systemctl start {{.SERVICENAME}}
+
+  clean:
+    desc: Clean every generated file
+    cmds:
+      - rm -rf frontend/build
+      - rm -rf backend/static
+      - rm -f {{.NAME}}
+      - rm -f backend/{{.NAME}}
