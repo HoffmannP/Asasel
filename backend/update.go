@@ -11,7 +11,7 @@ import (
 type Noput struct {
 }
 
-func initUpdate(duration int, account string) error {
+func initUpdate() error {
 	cmd := exec.Command("at", "now", "+", "1", "min")
 	cmd.Stdin = strings.NewReader(
 		"cd /tmp;" +
