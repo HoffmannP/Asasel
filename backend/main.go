@@ -27,6 +27,7 @@ type MessageOutput struct {
 func addRoutes(api huma.API) {
 	RegisterAccountOperations(huma.NewGroup(api, "/accounts"))
 	RegisterTimeoutOperations(huma.NewGroup(api, "/timeouts"))
+	RegisterConfigOperation(huma.NewGroup(api, "/config"))
 }
 
 func FileServer(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +46,7 @@ func main() {
 		api := humachi.New(api_route, huma.DefaultConfig("My API", "1.0.0"))
 		addRoutes(api)
 	})
+	router.Get("/server", http.RedirectHandler("/", 303).ServeHTTP)
 
 	router.Get("/*", FileServer)
 

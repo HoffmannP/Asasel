@@ -20,8 +20,13 @@
         return request.json()
     }
 
+    async function update () {
+        lockstate().then(result => { state = result })
+    }
+
     onMount(() => {
         state = lockstate()
+        setInterval(update, 5000)
     })
 </script>
 

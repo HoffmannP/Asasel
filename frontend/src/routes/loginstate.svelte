@@ -29,7 +29,7 @@
     {:else}
     <button onclick={kill}>
         <div class="usertime">{usertime.duration}</div>
-        <div>Kill</div>
+        <div>kill</div>
     </button>
     {/if}
     {:catch err}
@@ -49,7 +49,7 @@ button {
 }
 
 .usertime::before {
-    content: "Login since "
+    content: "Logged in for "
 }
 
 .usertime::after {

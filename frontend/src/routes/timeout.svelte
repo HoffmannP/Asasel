@@ -28,8 +28,13 @@
         state = loadtimeout()
     }
 
+    async function update () {
+        loadtimeout().then(result => { state = result })
+    }
+
     onMount(() => {
         state = loadtimeout()
+        setInterval(update, 5000)
     })
 </script>
 
@@ -44,7 +49,10 @@
     <button class="min" style="grid-area: valset" onclick={_ => setTimeout(varTimeout)}>{varTimeout}</button>
     <button style="grid-area: plus" onclick={() => varTimeout += 5}>+</button>
     {:else}
-    <button class="allgrid removeTimeout" onclick={delTimeout}>remove Timeout</button>
+    <button class="allgrid removeTimeout" onclick={delTimeout}>
+        <div class="remaining">{timeout.remaining}</div>
+        <div>remove</div>
+    </button>
     {/if}
     {:catch err}
     {console.error(err)}
@@ -69,5 +77,18 @@
 
 .allgrid {
     grid-area: 1 / 5 / 3 / 1;
+    font-size: 200%;
+}
+
+.remaining {
+    font-size: 35%;
+}
+
+.remaining::before {
+    content: "Timeout in "
+}
+
+.remaining::after {
+    content: "min"
 }
 </style>
