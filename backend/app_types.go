@@ -88,9 +88,6 @@ func parseServers(input string) []string {
 			servers = append(servers, trimmed)
 		}
 	}
-	if len(servers) == 0 {
-		return []string{"yoga", "nura", "hackmack", "bereisen"}
-	}
 	return servers
 }
 

@@ -18,8 +18,8 @@ func main() {
 	cfg := parseConfig()
 	app := newApp(cfg)
 
-	if cfg.Mode != "local" && cfg.Mode != "control" && cfg.Mode != "agent" {
-		log.Fatalf("invalid mode %q, expected local|control|agent", cfg.Mode)
+	if cfg.Mode != "local" && cfg.Mode != "control" {
+		log.Fatalf("invalid mode %q, expected local|control", cfg.Mode)
 	}
 	if (cfg.AuthUser == "") != (cfg.AuthPass == "") {
 		log.Fatalf("both -auth-user and -auth-pass must be set together")
@@ -42,7 +42,7 @@ func main() {
 
 	router.Get("/*", FileServer)
 
-	if cfg.Mode == "agent" {
+	if cfg.Mode == "local" && cfg.ControllerURL != "" {
 		go app.runAgentLoop(context.Background())
 	}
 

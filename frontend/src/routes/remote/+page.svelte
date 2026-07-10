@@ -4,7 +4,7 @@
     import Lockstate from '../lockstate.svelte'
     import Timeout from '../timeout.svelte'
 
-    let user = $state('linus')
+    let user = $state('')
     let server = $state('')
     let endpoint = $state('/api')
 
