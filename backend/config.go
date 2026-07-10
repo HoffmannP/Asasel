@@ -15,15 +15,22 @@ type ServlistOutput struct {
 	}
 }
 
-func RegisterConfigOperation(api huma.API) {
+type ClientConfigOutput struct {
+	Body struct {
+		Account string `json:"account" example:"linus"`
+	}
+}
+
+func RegisterConfigOperation(api huma.API, serverProvider func() []string, defaultAccount string) {
 	huma.Get(api, "/servers", func(ctx context.Context, input *NoInput) (*ServlistOutput, error) {
 		resp := &ServlistOutput{}
-		resp.Body.Servers = []string{
-			"yoga",
-			"nura",
-			"hackmack",
-			"bereisen",
-		}
+		resp.Body.Servers = serverProvider()
+		return resp, nil
+	})
+
+	huma.Get(api, "/client", func(ctx context.Context, input *NoInput) (*ClientConfigOutput, error) {
+		resp := &ClientConfigOutput{}
+		resp.Body.Account = defaultAccount
 		return resp, nil
 	})
 }

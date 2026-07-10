@@ -1,8 +1,9 @@
 package main
 
 import (
-	"embed"
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -13,43 +14,38 @@ import (
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
-//go:embed all:static/*
-var gui embed.FS
-
-const PORT = 2727
-
-type MessageOutput struct {
-	Body struct {
-		Message string `json:"message" example:"Hello, world!" doc:"Return message"`
-	}
-}
-
-func addRoutes(api huma.API) {
-	RegisterAccountOperations(huma.NewGroup(api, "/accounts"))
-	RegisterTimeoutOperations(huma.NewGroup(api, "/timeouts"))
-	RegisterConfigOperation(huma.NewGroup(api, "/config"))
-}
-
-func FileServer(w http.ResponseWriter, r *http.Request) {
-	path := "static" + r.URL.Path
-	if path[len(path)-1] == '/' {
-		path += "index.html"
-	}
-	http.ServeFileFS(w, r, gui, path)
-}
-
 func main() {
+	cfg := parseConfig()
+	app := newApp(cfg)
+
+	if cfg.Mode != "local" && cfg.Mode != "control" && cfg.Mode != "agent" {
+		log.Fatalf("invalid mode %q, expected local|control|agent", cfg.Mode)
+	}
+	if (cfg.AuthUser == "") != (cfg.AuthPass == "") {
+		log.Fatalf("both -auth-user and -auth-pass must be set together")
+	}
+	if cfg.DefaultAccount == "" {
+		log.Fatalf("-account must not be empty")
+	}
+
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
+	router.Use(func(next http.Handler) http.Handler {
+		return app.requireBasicAuth(next)
+	})
+	app.registerControlRoutes(router)
 
 	router.Route("/api", func(api_route chi.Router) {
 		api := humachi.New(api_route, huma.DefaultConfig("My API", "1.0.0"))
-		addRoutes(api)
+		addRoutes(api, app)
 	})
-	router.Get("/server", http.RedirectHandler("/", 303).ServeHTTP)
 
 	router.Get("/*", FileServer)
 
-	fmt.Printf("Starting server on port %d...\n", PORT)
-	http.ListenAndServe(fmt.Sprintf(":%d", PORT), router)
+	if cfg.Mode == "agent" {
+		go app.runAgentLoop(context.Background())
+	}
+
+	fmt.Printf("Starting %s server on %s...\n", cfg.Mode, cfg.ListenAddr)
+	http.ListenAndServe(cfg.ListenAddr, router)
 }

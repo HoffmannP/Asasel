@@ -1,19 +1,24 @@
 <script>
+    import { onMount } from 'svelte'
     import Server from './servers.svelte'
 
-    const port = 2727
-    const servers = [
-        'yoga',
-        'nura',
-        'hackmack',
-        'bereisen'
-    ]
+    let servers = $state([])
+
+    async function loadServers () {
+        const request = await fetch('/api/config/servers')
+        const data = await request.json()
+        return data.server || []
+    }
+
+    onMount(() => {
+        loadServers().then(result => { servers = result })
+    })
 
 </script>
 
 <div class="main">
     {#each servers as server}
-    <Server {server} {port} />
+    <Server {server} />
     {/each}
 </div>
 
