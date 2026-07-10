@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Asasel Quick</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: monospace;
+      background: #f2f2f2;
+      color: #111;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      width: min(92vw, 520px);
+      border: 2px solid #999;
+      border-radius: 12px;
+      background: #fff;
+      padding: 1rem;
+      box-sizing: border-box;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .value {
+      font-size: clamp(3rem, 18vw, 6rem);
+      text-align: center;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .muted {
+      color: #555;
+      text-align: center;
+    }
+    input, button {
+      font: inherit;
+      padding: 0.5rem;
+      border: 1px solid #999;
+      border-radius: 8px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="row">
+      <input id="account" placeholder="Account" />
+      <button id="save" type="button">Set</button>
+    </div>
+    <div class="muted" id="accountLabel">Account: -</div>
+    <div class="value" id="remaining">--</div>
+    <div class="muted" id="message">loading...</div>
+  </div>
+
+  <script>
+    const accountInput = document.getElementById('account');
+    const saveButton = document.getElementById('save');
+    const accountLabel = document.getElementById('accountLabel');
+    const remaining = document.getElementById('remaining');
+    const message = document.getElementById('message');
+
+    function readAccount() {
+      const p = new URLSearchParams(location.search);
+      return p.get('account') || '';
+    }
+
+    function writeAccount(account) {
+      const p = new URLSearchParams(location.search);
+      if (account) {
+        p.set('account', account);
+      } else {
+        p.delete('account');
+      }
+      history.replaceState({}, '', location.pathname + '?' + p.toString());
+    }
+
+    async function refresh() {
+      const account = readAccount();
+      const query = account ? '?account=' + encodeURIComponent(account) : '';
+      const resp = await fetch('/api/public/quick' + query);
+      const data = await resp.json();
+
+      accountInput.value = account || data.account || '';
+      accountLabel.textContent = 'Account: ' + (data.account || '-');
+      if (typeof data.remaining === 'number' && data.remaining >= 0) {
+        remaining.textContent = data.remaining;
+      } else {
+        remaining.textContent = '--';
+      }
+      message.textContent = data.message || '';
+    }
+
+    saveButton.addEventListener('click', () => {
+      writeAccount(accountInput.value.trim());
+      refresh().catch((e) => {
+        message.textContent = String(e);
+      });
+    });
+
+    refresh().catch((e) => {
+      message.textContent = String(e);
+    });
+    setInterval(() => {
+      refresh().catch((e) => {
+        message.textContent = String(e);
+      });
+    }, 5000);
+  </script>
+</body>
+</html>

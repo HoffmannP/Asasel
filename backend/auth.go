@@ -24,7 +24,7 @@ func (a *App) requireBasicAuth(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Agent polling has dedicated shared-secret auth and must not require browser auth.
-		if strings.HasPrefix(r.URL.Path, "/api/control/poll/") {
+		if strings.HasPrefix(r.URL.Path, "/api/control/poll/") || r.URL.Path == "/quick" || r.URL.Path == "/quick.html" || strings.HasPrefix(r.URL.Path, "/api/public/quick") {
 			next.ServeHTTP(w, r)
 			return
 		}

@@ -34,6 +34,7 @@ func main() {
 		return app.requireBasicAuth(next)
 	})
 	app.registerControlRoutes(router)
+	app.registerPublicRoutes(router)
 
 	router.Route("/api", func(api_route chi.Router) {
 		api := humachi.New(api_route, huma.DefaultConfig("My API", "1.0.0"))
