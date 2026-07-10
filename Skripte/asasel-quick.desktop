@@ -1,0 +1,11 @@
+# Kopiere diese Datei nach: ~/.local/share/applications/asasel-quick.desktop
+# Passe vor dem Kopieren REPO_PATH und DEINUSER an.
+
+[Desktop Entry]
+Name=Asasel Restzeit
+Type=Application
+Exec=firefox --new-window http://127.0.0.1:2727/quick?account=DEINUSER
+Icon=REPO_PATH/frontend/static/favicon.png
+Terminal=false
+Categories=Utility;Network;
+StartupNotify=true
