@@ -48,7 +48,7 @@
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="quickCard">
     <div class="row">
       <input id="account" placeholder="Account" />
       <button id="save" type="button">Set</button>
@@ -64,6 +64,19 @@
     const accountLabel = document.getElementById('accountLabel');
     const remaining = document.getElementById('remaining');
     const message = document.getElementById('message');
+    const quickCard = document.getElementById('quickCard');
+
+    function updateLiveLabel(account, remainingValue, messageText) {
+      const accountPart = account ? account : '-';
+      let status = '--';
+      if (typeof remainingValue === 'number' && remainingValue >= 0) {
+        status = remainingValue + ' min';
+      }
+
+      const titleText = 'Asasel [' + accountPart + ']: ' + status;
+      document.title = titleText;
+      quickCard.title = titleText + ' | ' + (messageText || '');
+    }
 
     function readAccount() {
       const p = new URLSearchParams(location.search);
@@ -94,21 +107,25 @@
         remaining.textContent = '--';
       }
       message.textContent = data.message || '';
+      updateLiveLabel(data.account || account, data.remaining, data.message || '');
     }
 
     saveButton.addEventListener('click', () => {
       writeAccount(accountInput.value.trim());
       refresh().catch((e) => {
         message.textContent = String(e);
+        updateLiveLabel(readAccount(), -1, String(e));
       });
     });
 
     refresh().catch((e) => {
       message.textContent = String(e);
+      updateLiveLabel(readAccount(), -1, String(e));
     });
     setInterval(() => {
       refresh().catch((e) => {
         message.textContent = String(e);
+        updateLiveLabel(readAccount(), -1, String(e));
       });
     }, 5000);
   </script>
