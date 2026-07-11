@@ -8,6 +8,16 @@ vars:
   FULLNAME: "{{trimSuffix \"/\" .INSTALL_PATH}}/{{.NAME}}"
   SERVICENAME: "{{lower .NAME}}"
   SERVICEFILE: /etc/systemd/system/{{.SERVICENAME}}.service
+  LOCAL_CONTROLLER_HOST: 127.0.0.1
+  LOCAL_CONTROLLER_PORT: "2727"
+  LOCAL_AGENT_HOST: 127.0.0.1
+  LOCAL_AGENT_PORT: "2828"
+  LOCAL_AGENT_ID: local-agent
+  LOCAL_ACCOUNT: linus
+  LOCAL_AUTH_USER: test
+  LOCAL_AUTH_PASS: test
+  LOCAL_SHARED_SECRET: local-dev-secret
+  LOCAL_LOG_DIR: /tmp/asasel-local-test
 
 tasks:
   build_frontend:
@@ -72,3 +82,78 @@ tasks:
       - rm -rf backend/static
       - rm -f {{.NAME}}
       - rm -f backend/{{.NAME}}
+
+  run_local_controller:
+    desc: Start local controller instance (foreground)
+    deps: [ build_backend ]
+    cmds:
+      - ./{{.NAME}} -mode control -listen {{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}}
+
+  run_local_agent:
+    desc: Start local node instance as root with outbound controller connection (foreground)
+    deps: [ build_backend ]
+    cmds:
+      - sudo ./{{.NAME}} -mode local -listen {{.LOCAL_AGENT_HOST}}:{{.LOCAL_AGENT_PORT}} -agent-id {{.LOCAL_AGENT_ID}} -controller-url http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}}
+
+  run_local_demo:
+    desc: Start local controller and local node together, stop with Ctrl+C
+    deps: [ build_backend ]
+    cmds:
+      - |
+        bash <<'BASH'
+        set -euo pipefail
+        mkdir -p {{.LOCAL_LOG_DIR}}
+        CONTROLLER_LOG={{.LOCAL_LOG_DIR}}/controller.log
+        AGENT_LOG={{.LOCAL_LOG_DIR}}/agent.log
+
+        # Ensure sudo credentials are available before starting root agent in background.
+        sudo -v
+
+        if command -v ss >/dev/null 2>&1; then
+          if ss -ltn | grep -qE '[:.]{{.LOCAL_CONTROLLER_PORT}}[[:space:]]'; then
+            echo "Controller port {{.LOCAL_CONTROLLER_PORT}} is already in use. Stop the other process first." >&2
+            ss -ltnp | grep -E '[:.]{{.LOCAL_CONTROLLER_PORT}}[[:space:]]' || true
+            exit 1
+          fi
+          if ss -ltn | grep -qE '[:.]{{.LOCAL_AGENT_PORT}}[[:space:]]'; then
+            echo "Agent port {{.LOCAL_AGENT_PORT}} is already in use. Stop the other process first." >&2
+            ss -ltnp | grep -E '[:.]{{.LOCAL_AGENT_PORT}}[[:space:]]' || true
+            exit 1
+          fi
+        fi
+
+        ./{{.NAME}} -mode control -listen {{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}} >"$CONTROLLER_LOG" 2>&1 &
+        CONTROLLER_PID=$!
+
+        sudo ./{{.NAME}} -mode local -listen {{.LOCAL_AGENT_HOST}}:{{.LOCAL_AGENT_PORT}} -agent-id {{.LOCAL_AGENT_ID}} -controller-url http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}} >"$AGENT_LOG" 2>&1 &
+        AGENT_PID=$!
+
+        cleanup() {
+          if sudo kill -0 "$AGENT_PID" 2>/dev/null; then
+            sudo kill "$AGENT_PID" 2>/dev/null || true
+          fi
+          if kill -0 "$CONTROLLER_PID" 2>/dev/null; then
+            kill "$CONTROLLER_PID" 2>/dev/null || true
+          fi
+        }
+        trap cleanup INT TERM EXIT
+
+        sleep 1
+        if ! kill -0 "$CONTROLLER_PID" 2>/dev/null; then
+          echo "Controller exited unexpectedly. See: $CONTROLLER_LOG" >&2
+          head -n 40 "$CONTROLLER_LOG" >&2 || true
+          exit 1
+        fi
+        if ! sudo kill -0 "$AGENT_PID" 2>/dev/null; then
+          echo "Agent exited unexpectedly. See: $AGENT_LOG" >&2
+          head -n 40 "$AGENT_LOG" >&2 || true
+          exit 1
+        fi
+
+        echo "Controller: http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}}/"
+        echo "Agent ID: {{.LOCAL_AGENT_ID}}"
+        echo "Logs: $CONTROLLER_LOG | $AGENT_LOG"
+        echo "Stop with Ctrl+C"
+
+        wait "$CONTROLLER_PID" "$AGENT_PID"
+        BASH
