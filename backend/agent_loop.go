@@ -74,6 +74,7 @@ func (a *App) runAgentLoop(ctx context.Context) {
 
 		pending = nil
 		if out.Command != nil {
+			log.Printf("agent poll received command op=%s account=%s id=%s", out.Command.Op, out.Command.Account, out.Command.ID)
 			result := executeRemoteCommand(*out.Command)
 			pending = &result
 		}

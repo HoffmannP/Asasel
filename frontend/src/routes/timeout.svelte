@@ -1,14 +1,6 @@
 <script>
-    import { onMount } from 'svelte'
-
-    let { endpoint, user } = $props()
-    let state = $state({ remaining: -1 })
+    let { endpoint, user, status, onRefresh } = $props()
     let varTimeout = $state(15)
-
-    async function loadtimeout () {
-        const request = await fetch(`${endpoint}/timeouts/${user}`)
-        return request.json()
-    }
 
     async function setTimeout (duration) {
         await fetch(`${endpoint}/timeouts/${user}`, {
@@ -18,31 +10,19 @@
             },
             body: JSON.stringify({ duration }),
         })
-        state = loadtimeout()
+        await onRefresh()
     }
 
-    async function delTimeout (duration) {
+    async function delTimeout () {
         await fetch(`${endpoint}/timeouts/${user}`, {
             method: 'DELETE'
         })
-        state = loadtimeout()
+        await onRefresh()
     }
-
-    async function update () {
-        loadtimeout().then(result => { state = result })
-    }
-
-    onMount(() => {
-        state = loadtimeout()
-        setInterval(update, 5000)
-    })
 </script>
 
 <div class="component timeout">
-    {#await state}
-    <div class="allgrid loading">... loading ...</div>
-    {:then timeout}
-    {#if timeout.remaining == -1}
+    {#if status.remaining == -1}
     <button class="min" style="grid-area: preset1" onclick={_ => setTimeout(30)}>30</button>
     <button class="min" style="grid-area: preset2" onclick={_ => setTimeout(60)}>60</button>
     <button disabled={ varTimeout <= 5 } style="grid-area: minus" onclick={() => varTimeout -= 5}>−</button>
@@ -50,14 +30,10 @@
     <button style="grid-area: plus" onclick={() => varTimeout += 5}>+</button>
     {:else}
     <button class="allgrid removeTimeout" onclick={delTimeout}>
-        <div class="remaining">{timeout.remaining}</div>
+        <div class="remaining">{status.remaining}</div>
         <div>remove</div>
     </button>
     {/if}
-    {:catch err}
-    {console.error(err)}
-    <div class="allgrid error">Error loading remote ressource</div>
-    {/await}
 </div>
 
 <style>

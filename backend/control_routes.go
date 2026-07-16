@@ -51,6 +51,9 @@ func (a *App) registerControlRoutes(router chi.Router) {
 	})
 
 	router.Route("/api/remote/{server}", func(r chi.Router) {
+		r.Get("/accounts/state/{account}", func(w http.ResponseWriter, r *http.Request) {
+			a.remoteStateGet(w, r)
+		})
 		r.Get("/accounts/lock/{account}", func(w http.ResponseWriter, r *http.Request) {
 			a.remoteLockGet(w, r)
 		})
@@ -60,8 +63,8 @@ func (a *App) registerControlRoutes(router chi.Router) {
 		r.Get("/accounts/time/{account}", func(w http.ResponseWriter, r *http.Request) {
 			a.remoteTimeGet(w, r)
 		})
-		r.Get("/accounts/killall/{account}", func(w http.ResponseWriter, r *http.Request) {
-			a.remoteKillallGet(w, r)
+		r.Post("/accounts/killall/{account}", func(w http.ResponseWriter, r *http.Request) {
+			a.remoteKillallPost(w, r)
 		})
 		r.Get("/timeouts/{account}", func(w http.ResponseWriter, r *http.Request) {
 			a.remoteTimeoutGet(w, r)

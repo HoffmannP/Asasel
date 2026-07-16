@@ -9,7 +9,7 @@ type MessageOutput struct {
 }
 
 func addRoutes(api huma.API, app *App) {
-	RegisterAccountOperations(huma.NewGroup(api, "/accounts"))
-	RegisterTimeoutOperations(huma.NewGroup(api, "/timeouts"))
-	RegisterConfigOperation(huma.NewGroup(api, "/config"), app.listServers, app.cfg.DefaultAccount)
+	RegisterAccountOperations(huma.NewGroup(api, "/accounts"), app)
+	RegisterTimeoutOperations(huma.NewGroup(api, "/timeouts"), app)
+	RegisterConfigOperation(huma.NewGroup(api, "/config"), app.listServers, app.cfg.DefaultAccount, app.cfg.Mode, app.cfg.ControllerURL)
 }

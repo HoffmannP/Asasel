@@ -26,6 +26,7 @@ tasks:
     sources:
       - src/**/*.svelte
       - src/**/*.js
+      - vite.config.js
       - static/*
     generates:
       - build/index.html
@@ -43,9 +44,7 @@ tasks:
     deps: [ build_frontend ]
     dir: backend
     sources:
-      - account.go
-      - timeout.go
-      - main.go
+      - ./*.go
       - static/*
     generates:
       - "{{.NAME}}"

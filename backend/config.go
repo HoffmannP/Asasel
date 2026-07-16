@@ -17,11 +17,13 @@ type ServlistOutput struct {
 
 type ClientConfigOutput struct {
 	Body struct {
-		Account string `json:"account" example:"linus"`
+		Account       string `json:"account" example:"linus"`
+		Mode          string `json:"mode" example:"local"`
+		ControllerURL string `json:"controllerUrl" example:"https://controller.example"`
 	}
 }
 
-func RegisterConfigOperation(api huma.API, serverProvider func() []string, defaultAccount string) {
+func RegisterConfigOperation(api huma.API, serverProvider func() []string, defaultAccount string, mode string, controllerURL string) {
 	huma.Get(api, "/servers", func(ctx context.Context, input *NoInput) (*ServlistOutput, error) {
 		resp := &ServlistOutput{}
 		resp.Body.Servers = serverProvider()
@@ -31,6 +33,8 @@ func RegisterConfigOperation(api huma.API, serverProvider func() []string, defau
 	huma.Get(api, "/client", func(ctx context.Context, input *NoInput) (*ClientConfigOutput, error) {
 		resp := &ClientConfigOutput{}
 		resp.Body.Account = defaultAccount
+		resp.Body.Mode = mode
+		resp.Body.ControllerURL = controllerURL
 		return resp, nil
 	})
 }

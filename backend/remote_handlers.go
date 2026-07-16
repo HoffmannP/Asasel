@@ -2,10 +2,31 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 )
+
+func (a *App) controlForwardTarget() (string, error) {
+	if a.cfg.Mode != "control" {
+		return "", errors.New("control forwarding only available in control mode")
+	}
+	servers := a.listServers()
+	if len(servers) == 0 {
+		return "", errors.New("no active agent available")
+	}
+	return servers[0], nil
+}
+
+func (a *App) controlForward(cmd RemoteCommand) (RemoteResult, error) {
+	agentID, err := a.controlForwardTarget()
+	if err != nil {
+		return RemoteResult{}, err
+	}
+	cmd.ID = newCommandID()
+	return a.queueAndAwait(agentID, cmd)
+}
 
 func (a *App) dispatchRemote(w http.ResponseWriter, r *http.Request, cmd RemoteCommand) (RemoteResult, bool) {
 	if a.cfg.Mode != "control" {
@@ -29,6 +50,32 @@ func (a *App) dispatchRemote(w http.ResponseWriter, r *http.Request, cmd RemoteC
 		return RemoteResult{}, false
 	}
 	return result, true
+}
+
+func (a *App) remoteStateGet(w http.ResponseWriter, r *http.Request) {
+	account := chi.URLParam(r, "account")
+	result, ok := a.dispatchRemote(w, r, RemoteCommand{Op: "get_state", Account: account})
+	if !ok {
+		return
+	}
+	lockState := false
+	if result.LockState != nil {
+		lockState = *result.LockState
+	}
+	duration := -1
+	if result.Duration != nil {
+		duration = *result.Duration
+	}
+	remaining := -1
+	if result.Remaining != nil {
+		remaining = *result.Remaining
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"message":   result.Message,
+		"lockstate": lockState,
+		"duration":  duration,
+		"remaining": remaining,
+	})
 }
 
 func (a *App) remoteLockGet(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +121,7 @@ func (a *App) remoteTimeGet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"message": result.Message, "duration": duration})
 }
 
-func (a *App) remoteKillallGet(w http.ResponseWriter, r *http.Request) {
+func (a *App) remoteKillallPost(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "account")
 	result, ok := a.dispatchRemote(w, r, RemoteCommand{Op: "killall", Account: account})
 	if !ok {

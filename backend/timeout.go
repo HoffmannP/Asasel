@@ -20,14 +20,14 @@ type TimeoutOutput struct {
 type TimeoutInput struct {
 	AccountInput
 	Body struct {
-		Duration int `path:"duration" maxLength:"30" example:"30" doc:"Time to wait"`
+		Duration int `json:"duration" maxLength:"30" example:"30" doc:"Time to wait"`
 	}
 }
 
 func setTimeout(duration int, account string) error {
 	cmd := exec.Command("at", "now", "+", fmt.Sprintf("%d", duration), "min")
 	cmd.Stdin = strings.NewReader(fmt.Sprintf(
-		"#timeout %s\nkillall -u '%s'\nusermod -e 1 '%s'",
+		"#timeout %s\nloginctl terminate-user '%s'\nusermod -e 1 '%s'",
 		account, account, account))
 	return cmd.Run()
 }
@@ -97,9 +97,24 @@ func delTimeout(account string) (bool, error) {
 	return false, nil
 }
 
-func RegisterTimeoutOperations(api huma.API) {
+func RegisterTimeoutOperations(api huma.API, app *App) {
 	huma.Post(api, "/{account}", func(ctx context.Context, input *TimeoutInput) (*TimeoutOutput, error) {
 		resp := &TimeoutOutput{}
+		if app.cfg.Mode == "control" {
+			result, err := app.controlForward(RemoteCommand{Op: "set_timeout", Account: input.Account, Duration: input.Body.Duration})
+			if err != nil {
+				resp.Body.Message = "Error setting timeout"
+				return resp, err
+			}
+			resp.Body.Message = result.Message
+			if result.Remaining != nil {
+				resp.Body.Remaining = *result.Remaining
+			} else {
+				resp.Body.Remaining = input.Body.Duration
+			}
+			return resp, nil
+		}
+
 		err := setTimeout(input.Body.Duration, input.Account)
 		if err != nil {
 			resp.Body.Message = "Error setting timeout"
@@ -112,6 +127,19 @@ func RegisterTimeoutOperations(api huma.API) {
 
 	huma.Get(api, "/{account}", func(ctx context.Context, input *AccountInput) (*TimeoutOutput, error) {
 		resp := &TimeoutOutput{}
+		if app.cfg.Mode == "control" {
+			result, err := app.controlForward(RemoteCommand{Op: "get_timeout", Account: input.Account})
+			if err != nil {
+				resp.Body.Message = "Timeout unreadable"
+				return resp, nil
+			}
+			resp.Body.Message = result.Message
+			if result.Remaining != nil {
+				resp.Body.Remaining = *result.Remaining
+			}
+			return resp, nil
+		}
+
 		remaining, err := getTimeout(input.Account)
 		if err != nil {
 			resp.Body.Message = "Timeout unreadable"
@@ -128,6 +156,16 @@ func RegisterTimeoutOperations(api huma.API) {
 
 	huma.Delete(api, "/{account}", func(ctx context.Context, input *AccountInput) (*MessageOutput, error) {
 		resp := &MessageOutput{}
+		if app.cfg.Mode == "control" {
+			result, err := app.controlForward(RemoteCommand{Op: "del_timeout", Account: input.Account})
+			if err != nil {
+				resp.Body.Message = "Timeout not deleted"
+				return resp, err
+			}
+			resp.Body.Message = result.Message
+			return resp, nil
+		}
+
 		success, err := delTimeout(input.Account)
 		if err != nil {
 			resp.Body.Message = "Timeout not deleted"

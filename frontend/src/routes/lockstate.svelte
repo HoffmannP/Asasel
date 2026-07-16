@@ -1,58 +1,52 @@
 <script>
-    import { onMount } from 'svelte'
+    let { endpoint, user, status, onRefresh } = $props()
 
-    let { endpoint, user } = $props()
-    let state = $state({ lockstate: false })
-
-    async function lock (lock) {
+    async function lock (lockState) {
         await fetch(`${endpoint}/accounts/lock/${user}`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ lockstate: lock }),
+            body: JSON.stringify({ lockstate: lockState }),
         })
-        state = lockstate()
+        await onRefresh()
     }
-
-    async function lockstate () {
-        const request = await fetch(`${endpoint}/accounts/lock/${user}`)
-        return request.json()
-    }
-
-    async function update () {
-        lockstate().then(result => { state = result })
-    }
-
-    onMount(() => {
-        state = lockstate()
-        setInterval(update, 5000)
-    })
 </script>
 
 <div class="component">
-    {#await state}
-    <div class="loading">... loading ...</div>
-    {:then userlock}
-    {#if userlock.lockstate}
+    {#if status.lockstate}
     <button class="locked" onclick={_ => lock(false)}>Unlock</button>
     {:else}
     <button class="" onclick={_ => lock(true)}>Lock</button>
     {/if}
-    {:catch err}
-    {console.error(err)}
-    <div class="error">Error loading remote ressource</div>
-    {/await}
 </div>
 
 <style>
+.component {
+    min-height: clamp(9rem, 18vmin, 16rem);
+}
+
 button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    line-height: 1;
     font-size: 0;
+    min-width: 0;
+    min-height: 0;
 }
 
 button::after {
-    margin-top: -12vmin;
-    font-size: calc(30vmin);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(4rem, 18vmin, 10rem);
+    line-height: 1;
+    width: 100%;
+    height: 100%;
     content: "🔓";
 }
 

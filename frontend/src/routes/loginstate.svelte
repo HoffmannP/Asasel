@@ -1,41 +1,24 @@
 <script>
-    import { onMount } from 'svelte'
-
-    let { endpoint, user } = $props()
-    let state = $state({ duration: -1 })
+    let { endpoint, user, status, onRefresh } = $props()
 
     async function kill () {
-        await fetch(`${endpoint}/accounts/killall/${user}`)
+        await fetch(`${endpoint}/accounts/killall/${user}`, {
+            method: 'POST'
+        })
         await (new Promise(_ => setTimeout(_, 1000)))
-        state = logintime()
+        await onRefresh()
     }
-
-    async function logintime () {
-        const request = await fetch(`${endpoint}/accounts/time/${user}`)
-        return request.json()
-    }
-
-    onMount(() => {
-        state = logintime()
-    })
 </script>
 
 <div class="component">
-    {#await state}
-    <div class="loading">... loading ...</div>
-    {:then usertime}
-    {#if usertime.duration == -1}
+    {#if status.duration == -1}
     <div class="silent">no login</div>
     {:else}
     <button onclick={kill}>
-        <div class="usertime">{usertime.duration}</div>
+        <div class="usertime">{status.duration}</div>
         <div>kill</div>
     </button>
     {/if}
-    {:catch err}
-    {console.error(err)}
-    <div class="error">Error loading remote ressource</div>
-    {/await}
 </div>
 
 <style>

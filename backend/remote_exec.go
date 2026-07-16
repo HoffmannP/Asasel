@@ -1,11 +1,48 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func executeRemoteCommand(cmd RemoteCommand) RemoteResult {
+	log.Printf("agent executing op=%s account=%s id=%s", cmd.Op, cmd.Account, cmd.ID)
 	result := RemoteResult{ID: cmd.ID, OK: false}
 
 	switch cmd.Op {
+	case "get_state":
+		locked, lockErr := getLockstate(cmd.Account)
+		minutes, timeErr := getLogintime(cmd.Account)
+		remaining, timeoutErr := getTimeout(cmd.Account)
+
+		result.LockState = &locked
+		dur := minutes
+		result.Duration = &dur
+		rem := remaining
+		result.Remaining = &rem
+
+		if lockErr != nil {
+			result.Message = "Error getting lockstate"
+			result.Error = lockErr.Error()
+			break
+		}
+		if timeErr != nil {
+			result.Message = "Error getting logintime"
+			result.Error = timeErr.Error()
+			break
+		}
+		if timeoutErr != nil {
+			result.Message = "Error getting timeout"
+			result.Error = timeoutErr.Error()
+			break
+		}
+
+		result.OK = true
+		if minutes == -1 {
+			result.Message = "Account not logged in"
+		} else {
+			result.Message = fmt.Sprintf("Account logged in for %d min", minutes)
+		}
 	case "get_lock":
 		locked, err := getLockstate(cmd.Account)
 		if err != nil {
@@ -107,5 +144,6 @@ func executeRemoteCommand(cmd RemoteCommand) RemoteResult {
 		result.Error = "unknown op"
 	}
 
+	log.Printf("agent finished op=%s account=%s id=%s ok=%t message=%q", cmd.Op, cmd.Account, cmd.ID, result.OK, result.Message)
 	return result
 }
