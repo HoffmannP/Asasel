@@ -48,8 +48,10 @@ tasks:
       - static/*
     generates:
       - "{{.NAME}}"
+    env:
+      CGO_ENABLED: 0
     cmds:
-      - go build .
+      - go build -ldflags="-extldflags=-static" .
       - cp "{{.NAME}}" ../
 
   install_service:
