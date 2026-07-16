@@ -78,6 +78,30 @@ func (a *App) remoteStateGet(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (a *App) remoteConfigGet(w http.ResponseWriter, r *http.Request) {
+	if a.cfg.Mode != "control" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"message": "Remote config only available in control mode"})
+		return
+	}
+	agentID := chi.URLParam(r, "server")
+	if agentID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"message": "Missing server id"})
+		return
+	}
+
+	a.controller.mu.Lock()
+	state, ok := a.controller.agents[agentID]
+	a.controller.mu.Unlock()
+	if !ok {
+		writeJSON(w, http.StatusNotFound, map[string]string{"message": "agent unknown"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"account": state.Account,
+	})
+}
+
 func (a *App) remoteLockGet(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "account")
 	result, ok := a.dispatchRemote(w, r, RemoteCommand{Op: "get_lock", Account: account})

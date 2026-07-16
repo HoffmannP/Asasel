@@ -42,8 +42,9 @@ type RemoteResult struct {
 }
 
 type PollRequest struct {
-	Name   string        `json:"name,omitempty"`
-	Result *RemoteResult `json:"result,omitempty"`
+	Name    string        `json:"name,omitempty"`
+	Account string        `json:"account,omitempty"`
+	Result  *RemoteResult `json:"result,omitempty"`
 }
 
 type PollResponse struct {
@@ -53,6 +54,7 @@ type PollResponse struct {
 type AgentState struct {
 	ID       string
 	Name     string
+	Account  string
 	LastSeen time.Time
 	Pending  chan RemoteCommand
 	Waiters  map[string]chan RemoteResult

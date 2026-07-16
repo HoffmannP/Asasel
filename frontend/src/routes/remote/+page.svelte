@@ -29,6 +29,20 @@
         }
     }
 
+    async function loadRemoteAccount () {
+        if (!server) {
+            return
+        }
+        const request = await fetch(`/api/remote/${encodeURIComponent(server)}/config`)
+        if (!request.ok) {
+            return
+        }
+        const data = await request.json()
+        if (data.account) {
+            user = data.account
+        }
+    }
+
     async function loadStatus () {
         if (!user || !server) {
             return
@@ -67,6 +81,7 @@
             endpoint = `/api/remote/${encodeURIComponent(server)}`
         }
         loadClientConfig().then(async () => {
+            await loadRemoteAccount()
             await updateStatus()
             timer = setInterval(updateStatus, STATUS_POLL_INTERVAL_MS)
         })

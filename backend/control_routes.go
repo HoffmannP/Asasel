@@ -33,6 +33,9 @@ func (a *App) registerControlRoutes(router chi.Router) {
 			if in.Name != "" {
 				state.Name = in.Name
 			}
+			if in.Account != "" {
+				state.Account = in.Account
+			}
 			if in.Result != nil {
 				if waiter, ok := state.Waiters[in.Result.ID]; ok {
 					waiter <- *in.Result
@@ -51,6 +54,9 @@ func (a *App) registerControlRoutes(router chi.Router) {
 	})
 
 	router.Route("/api/remote/{server}", func(r chi.Router) {
+		r.Get("/config", func(w http.ResponseWriter, r *http.Request) {
+			a.remoteConfigGet(w, r)
+		})
 		r.Get("/accounts/state/{account}", func(w http.ResponseWriter, r *http.Request) {
 			a.remoteStateGet(w, r)
 		})

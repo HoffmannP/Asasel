@@ -28,7 +28,7 @@ func (a *App) runAgentLoop(ctx context.Context) {
 		default:
 		}
 
-		payload := PollRequest{Result: pending}
+		payload := PollRequest{Result: pending, Account: a.cfg.DefaultAccount}
 		if pending == nil {
 			payload.Name = a.cfg.AgentID
 		}
