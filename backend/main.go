@@ -18,16 +18,6 @@ func main() {
 	cfg := parseConfig()
 	app := newApp(cfg)
 
-	if cfg.Mode != "local" && cfg.Mode != "control" {
-		log.Fatalf("invalid mode %q, expected local|control", cfg.Mode)
-	}
-	if (cfg.AuthUser == "") != (cfg.AuthPass == "") {
-		log.Fatalf("both -auth-user and -auth-pass must be set together")
-	}
-	if cfg.DefaultAccount == "" {
-		log.Fatalf("-account must not be empty")
-	}
-
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(func(next http.Handler) http.Handler {
@@ -43,15 +33,15 @@ func main() {
 
 	router.Get("/*", FileServer)
 
-	if cfg.Mode == "local" && cfg.ControllerURL != "" {
+	if cfg.Mode == LocalMode && cfg.ControllerURL != "" {
 		go app.runAgentLoop(context.Background())
 	}
 
-	fmt.Printf("Starting %s server on %s...\n", cfg.Mode, cfg.ListenAddr)
-
 	if len(cfg.Certs) == 2 {
+		fmt.Printf("Starting %s server on %s (TLS)...\n", cfg.Mode, cfg.ListenAddr)
 		log.Fatal(http.ListenAndServeTLS(cfg.ListenAddr, cfg.Certs[0], cfg.Certs[1], router))
 	} else {
+		fmt.Printf("Starting %s server on %s (insecure)...\n", cfg.Mode, cfg.ListenAddr)
 		log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
 	}
 }

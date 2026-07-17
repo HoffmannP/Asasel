@@ -30,7 +30,7 @@ func (a *App) quickStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if a.cfg.Mode != "local" {
+	if a.cfg.Mode != LocalMode {
 		writeJSON(w, http.StatusOK, map[string]any{
 			"account":   account,
 			"remaining": -1,

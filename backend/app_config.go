@@ -2,9 +2,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"log"
 	"os"
 	"strings"
 )
+
+const (
+	LocalMode   = "local"
+	ControlMode = "control"
+)
+
 
 func parseCerts(input string) []string {
 	if input == "" {
@@ -23,7 +31,7 @@ func parseAuth(input string) (string, string) {
 	}
 	parts := strings.SplitN(input, ":", 2)
 	if len(parts) != 2 {
-		panic("invalid auth format, expected user:pass")
+		log.Fatal("invalid auth format, expected user:pass")
 	}
 	return parts[0], parts[1]
 }
@@ -34,7 +42,7 @@ func parseConfig() AppConfig {
 		defaultID = "node"
 	}
 
-	mode := flag.String("mode", "local", "Run mode: local|control")
+	mode := flag.String("mode", LocalMode, fmt.Sprintf("Run mode: %s|%s", LocalMode, ControlMode))
 	listen := flag.String("listen", ":2727", "Listen address for HTTP server")
 	controllerURL := flag.String("controller-url", "", "Controller base URL for outbound agent polling from local mode, e.g. https://controller.example")
 	agentID := flag.String("agent-id", defaultID, "Unique node id used for registration at the controller")
@@ -46,8 +54,17 @@ func parseConfig() AppConfig {
 
 	authUser, authPass := parseAuth(strings.TrimSpace(*auth))
 
+	modeStr := strings.ToLower(strings.TrimSpace(*mode))
+	if modeStr != LocalMode && modeStr != ControlMode {
+		log.Fatalf("invalid mode %q, expected %s|%s", modeStr, LocalMode, ControlMode)
+	}
+
+	if modeStr == LocalMode && strings.TrimSpace(*defaultAccount) == "" {
+		log.Fatal("-account must not be empty in local mode")
+	}
+
 	return AppConfig{
-		Mode:           strings.ToLower(strings.TrimSpace(*mode)),
+		Mode:           modeStr,
 		ListenAddr:     *listen,
 		ControllerURL:  strings.TrimSpace(*controllerURL),
 		AgentID:        strings.TrimSpace(*agentID),
