@@ -100,7 +100,7 @@ if [[ -n "${ASASEL_AUTH_USER:-}" || -n "${ASASEL_AUTH_PASS:-}" ]]; then
     echo "ASASEL_AUTH_USER und ASASEL_AUTH_PASS muessen zusammen gesetzt sein" >&2
     exit 1
   fi
-  args+=( -auth-user "${ASASEL_AUTH_USER}" -auth-pass "${ASASEL_AUTH_PASS}" )
+  args+=( -auth "${ASASEL_AUTH_USER}:${ASASEL_AUTH_PASS}" )
 fi
 
 exec /usr/local/bin/Asasel "${args[@]}"
