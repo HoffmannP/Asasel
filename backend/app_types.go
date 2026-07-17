@@ -6,7 +6,6 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 )
@@ -20,7 +19,7 @@ type AppConfig struct {
 	DefaultAccount string
 	AuthUser       string
 	AuthPass       string
-	StaticServers  []string
+	Certs          []string
 }
 
 type RemoteCommand struct {
@@ -81,21 +80,9 @@ func newApp(cfg AppConfig) *App {
 	}
 }
 
-func parseServers(input string) []string {
-	parts := strings.Split(input, ",")
-	servers := make([]string, 0, len(parts))
-	for _, p := range parts {
-		trimmed := strings.TrimSpace(p)
-		if trimmed != "" {
-			servers = append(servers, trimmed)
-		}
-	}
-	return servers
-}
-
 func (a *App) listServers() []string {
 	if a.cfg.Mode != "control" {
-		return a.cfg.StaticServers
+		return []string{}
 	}
 	now := time.Now()
 	a.controller.mu.Lock()

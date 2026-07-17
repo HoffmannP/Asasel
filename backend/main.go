@@ -48,5 +48,10 @@ func main() {
 	}
 
 	fmt.Printf("Starting %s server on %s...\n", cfg.Mode, cfg.ListenAddr)
-	http.ListenAndServe(cfg.ListenAddr, router)
+
+	if len(cfg.Certs) == 2 {
+		log.Fatal(http.ListenAndServeTLS(cfg.ListenAddr, cfg.Certs[0], cfg.Certs[1], router))
+	} else {
+		log.Fatal(http.ListenAndServe(cfg.ListenAddr, router))
+	}
 }

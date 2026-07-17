@@ -88,13 +88,13 @@ tasks:
     desc: Start local controller instance (foreground)
     deps: [ build_backend ]
     cmds:
-      - ./{{.NAME}} -mode control -listen {{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}}
+      - ./{{.NAME}} -mode control -listen {{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth {{.LOCAL_AUTH_USER}}:{{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}}
 
   run_local_agent:
     desc: Start local node instance as root with outbound controller connection (foreground)
     deps: [ build_backend ]
     cmds:
-      - sudo ./{{.NAME}} -mode local -listen {{.LOCAL_AGENT_HOST}}:{{.LOCAL_AGENT_PORT}} -agent-id {{.LOCAL_AGENT_ID}} -controller-url http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}}
+      - sudo ./{{.NAME}} -mode local -listen {{.LOCAL_AGENT_HOST}}:{{.LOCAL_AGENT_PORT}} -agent-id {{.LOCAL_AGENT_ID}} -controller-url http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth {{.LOCAL_AUTH_USER}}:{{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}}
 
   run_local_demo:
     desc: Start local controller and local node together, stop with Ctrl+C
@@ -123,10 +123,10 @@ tasks:
           fi
         fi
 
-        ./{{.NAME}} -mode control -listen {{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}} >"$CONTROLLER_LOG" 2>&1 &
+        ./{{.NAME}} -mode control -listen {{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth {{.LOCAL_AUTH_USER}}:{{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}} >"$CONTROLLER_LOG" 2>&1 &
         CONTROLLER_PID=$!
 
-        sudo ./{{.NAME}} -mode local -listen {{.LOCAL_AGENT_HOST}}:{{.LOCAL_AGENT_PORT}} -agent-id {{.LOCAL_AGENT_ID}} -controller-url http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth-user {{.LOCAL_AUTH_USER}} -auth-pass {{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}} >"$AGENT_LOG" 2>&1 &
+        sudo ./{{.NAME}} -mode local -listen {{.LOCAL_AGENT_HOST}}:{{.LOCAL_AGENT_PORT}} -agent-id {{.LOCAL_AGENT_ID}} -controller-url http://{{.LOCAL_CONTROLLER_HOST}}:{{.LOCAL_CONTROLLER_PORT}} -account {{.LOCAL_ACCOUNT}} -auth {{.LOCAL_AUTH_USER}}:{{.LOCAL_AUTH_PASS}} -shared-secret {{.LOCAL_SHARED_SECRET}} >"$AGENT_LOG" 2>&1 &
         AGENT_PID=$!
 
         cleanup() {
